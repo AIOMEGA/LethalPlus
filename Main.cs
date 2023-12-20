@@ -44,7 +44,7 @@ namespace LethalPlus
             harmony.PatchAll(typeof(Main)); // Add an individual patch for any created aka CrawlerPatch ect.
             harmony.PatchAll(typeof(SprayBeePatch));
             harmony.PatchAll(typeof(SprayPaintItemPatch));
-            harmony.PatchAll(typeof(PlayerControllerBPatch));
+            //harmony.PatchAll(typeof(PlayerControllerBPatch));
             harmony.PatchAll(typeof(OnGameStartedPatch));
 
             /*Assets.PopulateAssets();
