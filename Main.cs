@@ -23,7 +23,7 @@ namespace LethalPlus
     {
         private const string modGUID = "OMEGA.LethalPlus";
         private const string modName = "LethalPlus";
-        private const string modVersion = "0.4.0";
+        private const string modVersion = "0.4.1";
         
         private readonly Harmony harmony = new Harmony(modGUID);
 
