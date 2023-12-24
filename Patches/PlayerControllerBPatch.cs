@@ -8,14 +8,10 @@ using System.Threading.Tasks;
 
 namespace LethalPlus.Patches
 {
+    // Game Master Mod already comes with inf sprint
     /*[HarmonyPatch(typeof(PlayerControllerB))]
     internal class PlayerControllerBPatch
     {
-        [HarmonyPatch("Update")]
-        [HarmonyPostfix]
-        static void infiniteSprintPatch(ref float ___sprintMeter)
-        {
-            ___sprintMeter = 1f;
-        }
+
     }*/
 }
