@@ -7,7 +7,7 @@ LethalPlus enhances Lethal Company by introducing numerous new features (current
 ### BeeHive Discombobulation
 
 - **Functionality**: Using Spray Paint on a BeeHive triggers a unique effect. The bees become discombobulated for a brief period, allowing you to run off with the hive.
-  - **Update v0.4.0**: 
+  - **Update v0.4.1**: 
     - Significantly reduced discombobulation time.
     - Rendered the bees docile (they can't attack while sprayed).
     - Fixed a bug where the timer was halved with each bee in-game.
@@ -21,7 +21,7 @@ LethalPlus enhances Lethal Company by introducing numerous new features (current
 - Note: Only one Hive can be sprayed at a time; spraying another transfers the effect from the last to the newest.
 - Note: I test this mod solo, I'm unsure how it deals with multiple people using Spray Paint, my guess however is that for proper use only 1 should be used per group.
 
-### Pepper Spray **v0.4.0** (Suggested by DrivingCrooner)
+### Pepper Spray **v0.4.1** (Suggested by DrivingCrooner)
 - **Functionality**: Using Spray Paint on an Enemy stuns them like the Bees, which monsters can be stunned and which will you die trying to stun?
 
 #### How It Works
