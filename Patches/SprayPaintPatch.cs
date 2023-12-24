@@ -70,7 +70,7 @@ namespace LethalPlus.Patches
 
                 if (Enem != null)
                 {
-                    Main.Log.LogInfo("Enemy Returned from Scan: " + Enem + "Position: " + sprayPos);
+                    Main.Log.LogInfo("Enemy Returned from Scan: " + Enem.name + "Position: " + sprayPos);
                 }
                 else
                 {
@@ -230,7 +230,7 @@ namespace LethalPlus.Patches
     [HarmonyPatch(typeof(EnemyAI))]
     internal class SprayEnemyPatch
     {
-        private static float sprayDuration = 10f; // stun duration specific for Enemies
+        private static float sprayDuration = 8f; // stun duration specific for Enemies
         private static float sprayTimer;
         public static EnemyAI targetEnemy;
         private static bool enemiesAffected;
@@ -264,9 +264,12 @@ namespace LethalPlus.Patches
                 case "HoarderBug(Clone)":
                     enemiesAffected |= ProcessEnemyType(SprayPaintItemPatch.Bugs);
                     break;
+                /*case "SpringMan(Clone)":
+                    SpringSprayPatch.isBlind = true;
+                    break;*/
                 default:
-                    Main.Log.LogInfo("Unknown enemy type.");
-                    break;
+                    //Main.Log.LogInfo("Unknown enemy type.");
+                    return;
             }
 
             // Update the timer and check duration outside the foreach loop
@@ -329,4 +332,39 @@ namespace LethalPlus.Patches
             Main.Log.LogInfo($"{SprayPaintItemPatch.Enem} recovered.");
         }
     }
+
+    /*[HarmonyPatch(typeof(SpringManAI))]
+    class SpringSprayPatch
+    {
+        public static bool isBlind = false;
+        [HarmonyPatch("Update")]
+        [HarmonyPostfix]
+        static void SpringManBlindPatch(SpringManAI __instance)
+        {
+            Main.Log.LogInfo($"SpringMan {isBlind}");
+            if (isBlind)
+            {
+                Main.Log.LogInfo($"Speedify");
+                __instance.agent.speed = 0f;
+            }
+        }
+    }*/
+
+    /*[HarmonyPatch(typeof(SpringManAI), "HasLineOfSightToPosition")]
+    class SpringManAI_HasLineOfSightToPosition_Patch
+    {
+        static bool Prefix(SpringManAI __instance, Vector3 pos, ref bool __result)
+        {
+            if (isBliind)
+            {
+                // If the AI is blind, return true without executing the original method
+                __result = true;
+                return false; // Skip the original method
+            }
+
+            // Continue with the original method execution
+            return true;
+        }
+    }*/
+
 }

@@ -23,8 +23,8 @@ namespace LethalPlus
     {
         private const string modGUID = "OMEGA.LethalPlus";
         private const string modName = "LethalPlus";
-        private const string modVersion = "0.1.0";
-
+        private const string modVersion = "0.4.0";
+        
         private readonly Harmony harmony = new Harmony(modGUID);
 
         private static Main Instance;
@@ -41,12 +41,14 @@ namespace LethalPlus
             Log = BepInEx.Logging.Logger.CreateLogSource(modGUID);
             Log.LogInfo("Mod Loaded");
 
+            //harmony.PatchAll(typeof(PlayerControllerBPatch));  // Comment out before uploading
+
             harmony.PatchAll(typeof(Main)); // Add an individual patch for any created aka CrawlerPatch ect.
             harmony.PatchAll(typeof(SprayBeePatch));
             harmony.PatchAll(typeof(SprayPaintItemPatch));
-            harmony.PatchAll(typeof(PlayerControllerBPatch));
             harmony.PatchAll(typeof(SprayEnemyPatch));
             harmony.PatchAll(typeof(BeeOuchPatch));
+            //harmony.PatchAll(typeof(SpringSprayPatch));
 
             /*Assets.PopulateAssets();
             EnemyType val = Assets.MainAssetBundle.LoadAsset<EnemyType>("SkibidiDef");
@@ -60,7 +62,7 @@ namespace LethalPlus
         }
 
 
-        public static void LogPlayerNames()
+        /*public static void LogPlayerNames()
         {
             if (StartOfRound.Instance.allPlayerScripts != null)
             {
@@ -77,7 +79,7 @@ namespace LethalPlus
                     }
                 }
             }
-        }
+        }*/
     }
 
     /*[HarmonyPatch(typeof(StartOfRound))]
