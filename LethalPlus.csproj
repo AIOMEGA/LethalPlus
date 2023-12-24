@@ -95,6 +95,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Lethal Company_Data\Managed\UnityEngine.AIModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.AnimationModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Lethal Company_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.AssetBundleModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Lethal Company_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
@@ -112,7 +116,7 @@
     <Compile Include="Enemies\PitFiendAI.cs" />
     <Compile Include="Patches\CrawlerPatch.cs" />
     <Compile Include="Patches\PlayerControllerBPatch.cs" />
-    <Compile Include="Patches\SprayBeePatch.cs" />
+    <Compile Include="Patches\SprayPaintPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

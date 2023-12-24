@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LethalPlus.Patches
 {
-    /*[HarmonyPatch(typeof(PlayerControllerB))]
+    [HarmonyPatch(typeof(PlayerControllerB))]
     internal class PlayerControllerBPatch
     {
         [HarmonyPatch("Update")]
@@ -17,5 +17,5 @@ namespace LethalPlus.Patches
         {
             ___sprintMeter = 1f;
         }
-    }*/
+    }
 }

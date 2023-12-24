@@ -44,8 +44,9 @@ namespace LethalPlus
             harmony.PatchAll(typeof(Main)); // Add an individual patch for any created aka CrawlerPatch ect.
             harmony.PatchAll(typeof(SprayBeePatch));
             harmony.PatchAll(typeof(SprayPaintItemPatch));
-            //harmony.PatchAll(typeof(PlayerControllerBPatch));
-            harmony.PatchAll(typeof(OnGameStartedPatch));
+            harmony.PatchAll(typeof(PlayerControllerBPatch));
+            harmony.PatchAll(typeof(SprayEnemyPatch));
+            harmony.PatchAll(typeof(BeeOuchPatch));
 
             /*Assets.PopulateAssets();
             EnemyType val = Assets.MainAssetBundle.LoadAsset<EnemyType>("SkibidiDef");
@@ -92,7 +93,8 @@ namespace LethalPlus
         }
     }*/
 
-    public static class Assets
+    //gonna use as reference later
+    /*public static class Assets
     {
         public static string mainAssetBundleName = "skibidibundle";
 
@@ -113,5 +115,5 @@ namespace LethalPlus
                 }
             }
         }
-    }
+    }*/
 }
