@@ -23,7 +23,7 @@ namespace LethalPlus
     {
         private const string modGUID = "OMEGA.LethalPlus";
         private const string modName = "LethalPlus";
-        private const string modVersion = "0.4.1";
+        private const string modVersion = "0.7.0";
         
         private readonly Harmony harmony = new Harmony(modGUID);
 
@@ -39,15 +39,17 @@ namespace LethalPlus
             }
 
             Log = BepInEx.Logging.Logger.CreateLogSource(modGUID);
-            Log.LogInfo("Mod Loaded");
 
-            //harmony.PatchAll(typeof(PlayerControllerBPatch));  // Comment out before uploading
-
-            harmony.PatchAll(typeof(Main)); // Add an individual patch for any created aka CrawlerPatch ect.
+            harmony.PatchAll(typeof(Main));
             harmony.PatchAll(typeof(SprayBeePatch));
             harmony.PatchAll(typeof(SprayPaintItemPatch));
             harmony.PatchAll(typeof(SprayEnemyPatch));
             harmony.PatchAll(typeof(BeeOuchPatch));
+            harmony.PatchAll(typeof(SprayPricePatch));
+            //harmony.PatchAll(typeof(PlayerControllerBPatch));
+
+            Log.LogInfo("Mod Loaded");
+
             //harmony.PatchAll(typeof(SpringSprayPatch));
 
             /*Assets.PopulateAssets();
@@ -61,39 +63,7 @@ namespace LethalPlus
 
         }
 
-
-        /*public static void LogPlayerNames()
-        {
-            if (StartOfRound.Instance.allPlayerScripts != null)
-            {
-                foreach (PlayerControllerB playerScript in StartOfRound.Instance.allPlayerScripts)
-                {
-                    if (playerScript != null)
-                    {
-                        // Log the player's name
-                       Log.LogInfo("Player Name: " + playerScript.playerUsername);
-                    }
-                    else
-                    {
-                        Log.LogInfo("Player Name: is null");
-                    }
-                }
-            }
-        }*/
     }
-
-    /*[HarmonyPatch(typeof(StartOfRound))]
-    internal class OnGameStartedPatch
-    {
-        public static RedLocustBees[] Bees { get; set; }
-
-        [HarmonyPatch("Start")]
-        [HarmonyPostfix]
-        static void BeeInstancePatch()
-        {
-            Bees = UnityEngine.Object.FindObjectsOfType<RedLocustBees>();
-        }
-    }*/
 
     //gonna use as reference later
     /*public static class Assets

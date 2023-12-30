@@ -136,10 +136,8 @@ C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\Uni
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.ClusterInputModule.pdb
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.ClusterRendererModule.pdb
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.CrashReportingModule.pdb
-C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.VRModule.pdb
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.ImageConversionModule.pdb
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.SubsystemsModule.pdb
-C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.JSONSerializeModule.pdb
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.LocalizationModule.pdb
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.UnityWebRequestModule.pdb
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.UnityWebRequestAssetBundleModule.pdb
@@ -157,12 +155,9 @@ C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\Uni
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.TextCoreFontEngineModule.pdb
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.TextCoreTextEngineModule.pdb
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.SpriteShapeModule.pdb
-C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.UIElementsModule.pdb
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.VehiclesModule.pdb
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.WindModule.pdb
-C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.XRModule.pdb
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.ARModule.pdb
-C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\UnityEngine.InputModule.pdb
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\obj\Debug\LethalPlus.csproj.CopyComplete
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\LC_API.dll
 C:\SteamLibrary\steamapps\common\Lethal Company\Lethal+\LethalPlus\bin\Debug\LethalLib.dll

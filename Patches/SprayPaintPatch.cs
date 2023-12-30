@@ -4,6 +4,10 @@ using UnityEngine;
 using GameNetcodeStuff;
 using System;
 using System.Linq;
+using BepInEx;
+using BepInEx.Configuration;
+using UnityEngine.AI;
+using System.Collections;
 
 namespace LethalPlus.Patches
 {
@@ -44,6 +48,7 @@ namespace LethalPlus.Patches
                 {
                     IsBeeHiveSprayed = true;
                     ItemSprayed = val;
+                    SprayBeePatch.sprayTimer = 0f;
                     Main.Log.LogInfo("Sprayed");
                 }
                 // If the Spray Paint collided with an Enemy (they have multiple mesh names for some reason)
@@ -52,6 +57,8 @@ namespace LethalPlus.Patches
                 {
                     IsEnemySprayed = true;
                     ItemSprayed = val;
+                    SprayEnemyPatch.sprayTimer = 0f;
+                    SprayEnemyPatch.processTimer = 0f;
                     Main.Log.LogInfo("Sprayed");
                 }
 
@@ -67,6 +74,15 @@ namespace LethalPlus.Patches
                 Main.Log.LogInfo("Spray Paint Pos and Rot: " + sprayPos + " , " + sprayRot); // coordinates of where it was sprayed and what direction
 
                 Enem = GetClosestEnemy(sprayPos); // Scan for closest enemy to where the spray collided with an object
+
+                SprayEnemyPatch.sprayDuration = UnityEngine.Random.Range(8f, 20f);
+                Main.Log.LogInfo($"Enemy Stun Duration: {SprayEnemyPatch.sprayDuration}");
+
+                SprayBeePatch.sprayDuration = UnityEngine.Random.Range(3f, 8f);
+                Main.Log.LogInfo($"Bee Stun Duration: {SprayBeePatch.sprayDuration}");
+
+                SprayEnemyPatch.behaviorState = UnityEngine.Random.Range(1, 4);
+                Main.Log.LogInfo($"Behavior: {SprayEnemyPatch.behaviorState}");
 
                 if (Enem != null)
                 {
@@ -132,8 +148,8 @@ namespace LethalPlus.Patches
     [HarmonyPatch(typeof(RedLocustBees))]
     internal class SprayBeePatch
     {
-        private static float sprayDuration = 8f; // Set the duration of stun in seconds
-        public static float sprayTimer;
+        public static float sprayDuration; // Set the duration of stun in seconds
+        public static float sprayTimer = 0f;
         public static RedLocustBees targetBee;
 
         [HarmonyPatch("Update")]
@@ -142,7 +158,7 @@ namespace LethalPlus.Patches
         {
             GrabbableObject sprayedItem = null;
             // If no bees or if no item was sprayed or if what was sprayed wasn't a hive then return
-            if (SprayPaintItemPatch.Bees == null || SprayPaintItemPatch.Bees.Length == 0 
+            if (SprayPaintItemPatch.Bees == null || SprayPaintItemPatch.Bees.Length == 0
                 || SprayPaintItemPatch.ItemSprayed.collider == null || !SprayPaintItemPatch.IsBeeHiveSprayed)
             {
                 return;
@@ -230,30 +246,30 @@ namespace LethalPlus.Patches
     [HarmonyPatch(typeof(EnemyAI))]
     internal class SprayEnemyPatch
     {
-        private static float sprayDuration = 8f; // stun duration specific for Enemies
-        private static float sprayTimer;
-        public static EnemyAI targetEnemy;
+        public static float sprayDuration;
+        public static float sprayTimer = 0f;
         private static bool enemiesAffected;
+        public static int behaviorState;
+        public static PlayerControllerB closestPlayer;
+        private static float processTime = 1f;
+        public static float processTimer = 0f;
+        private static Vector3 flightDestination;
+        //private static Vector3 oldDestination;
+        private static bool canRun = false;
+        private static bool isEligible = false;
+        private static SandSpiderAI targetSpider;
+        private static bool setDest = false;
 
         [HarmonyPatch("Update")]
         [HarmonyPostfix]
         static void SprayEnemyPatcher(EnemyAI __instance)
         {
-            // If no enemy is close or no enemies are spawned or no enemy has been sprayed then return
-            if (SprayPaintItemPatch.Enem == null ||
-                SprayPaintItemPatch.Enemies.Length == 0 ||
-                !SprayPaintItemPatch.IsEnemySprayed)
-            {
-                return;
-            }
-            
-            //Main.Log.LogInfo($"Processing enemy: {SprayPaintItemPatch.Enem.name}");
-
+            if (!ShouldProcess()) { return; }
             // go through and see what type of enemy it is and check if it matches the closest enemy to save performance
             switch (SprayPaintItemPatch.Enem.name)
             {
                 case "SandSpider(Clone)":
-                    enemiesAffected |= ProcessSpider(SprayPaintItemPatch.Spiders);
+                    enemiesAffected |= ProcessSpider(__instance);
                     break;
                 case "Centipede(Clone)":
                     enemiesAffected |= ProcessEnemyType(SprayPaintItemPatch.Centipedes);
@@ -271,9 +287,6 @@ namespace LethalPlus.Patches
                     //Main.Log.LogInfo("Unknown enemy type.");
                     return;
             }
-
-            // Update the timer and check duration outside the foreach loop
-            // Same as bees nothing special here
             if (enemiesAffected && __instance == SprayPaintItemPatch.Enem)
             {
                 sprayTimer += Time.deltaTime;
@@ -285,6 +298,249 @@ namespace LethalPlus.Patches
             }
         }
 
+        private static bool ShouldProcess()
+        {
+            return SprayPaintItemPatch.Enem != null &&
+                   SprayPaintItemPatch.Enemies.Length > 0 &&
+                   SprayPaintItemPatch.IsEnemySprayed;
+        }
+
+        private static bool ProcessSpider(EnemyAI instance)
+        {
+            foreach (SandSpiderAI spider in SprayPaintItemPatch.Spiders)
+            {
+                if (IsEligibleSpider(spider))
+                {
+                    targetSpider = spider;
+                    isEligible = true;
+                }
+            }
+            if (isEligible)
+            {
+                ProcessSpiderBehavior(targetSpider);
+            }
+            if (isEligible && instance == SprayPaintItemPatch.Enem && targetSpider.transform.position == instance.transform.position)
+            {
+                processTimer += Time.deltaTime;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        private static bool IsEligibleSpider(SandSpiderAI spider)
+        {
+            return spider != null &&
+                   SprayPaintItemPatch.Enem.transform.position == spider.transform.position &&
+                   SprayPaintItemPatch.IsEnemySprayed;
+        }
+        private static void ProcessSpiderBehavior(SandSpiderAI spider)
+        {
+            closestPlayer = spider.GetClosestPlayer();
+            if (closestPlayer == null)
+            {
+                return;
+            }
+            else
+            {
+                Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} player position: {closestPlayer.transform.position}");
+            }
+            switch (behaviorState)
+            {
+                case 1: // Fight
+                    if (processTimer <= processTime)
+                    {
+                        spider.spiderSpeed = 0f;
+                        spider.agent.speed = 0f;
+                    }
+                    else
+                    {
+                        spider.spiderSpeed = 12f;
+                        spider.agent.speed = 12f;
+                        spider.agent.SetDestination(closestPlayer.transform.position);
+                    }
+                    Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} {spider} Decided to FIGHT");
+                    break;
+                case 2: // Flight
+                    Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} RS1 Spider info:\n Spider Positon: {spider.transform.position}\n flightDestination: {flightDestination}\n Distance to destination: {Vector3.Distance(spider.transform.position, flightDestination)}\n Destination: {spider.agent.destination}\n Path: {spider.agent.pathEndPosition}");
+                    if (processTimer <= processTime) // Spider first sprayed it pauses for a second
+                    {
+                        Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} processing {processTimer} pause");
+                        spider.spiderSpeed = 0f;
+                        spider.agent.speed = 0f;
+                        DeterminePath(spider); // determines place to run away to
+
+                    }
+                    else if (canRun && Vector3.Distance(spider.transform.position, flightDestination) <= 5f) // if spider reaches destination
+                    {
+                        if (!IsPlayerInPath(spider, flightDestination)) // check if player is in path
+                        {
+                            DeterminePath(spider); // determine new path
+                        }
+                        else
+                        {
+                            Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} {spider} is trapped 3");
+                            behaviorState = 1; // Switch to attack
+                        }
+                    }
+                    else if (spider.agent.destination != flightDestination // If the Spider ever tries going somewhere after already getting a path
+                        || spider.agent.pathEndPosition != flightDestination && setDest && canRun) // for instance if a player walks into its webbing
+                    {
+                        Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} Spider destination not FD");
+                        NavMeshPath path = new NavMeshPath();
+                        NavMesh.CalculatePath(spider.transform.position, flightDestination, NavMesh.AllAreas, path);
+                        spider.spiderSpeed = 14f;
+                        spider.agent.speed = 14f;
+                        // ReSet the path for the spider
+                        spider.agent.SetPath(path);
+                        Main.Log.LogInfo($"Set Path 2 {spider.agent.pathEndPosition}");
+                        if (spider.agent.destination != flightDestination)
+                        {
+                            Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} Spider destination STILL not FD");
+                        }
+                    }
+                    else if (spider.agent.pathPending || spider.agent.isPathStale) // If the Spider is still calculating the path
+                    {
+                        Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} RS2 Path Pending: {spider.agent.pathPending}\n Path Stale: {spider.agent.isPathStale}");
+                        return; // leave
+                    }
+                    else
+                    {
+                        Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} processed {processTimer} RUN ; {canRun}");
+                        // Make the Spider run
+                        spider.spiderSpeed = 14f;
+                        spider.agent.speed = 14f;
+
+                        if (spider.agent.destination != flightDestination || spider.agent.pathEndPosition != flightDestination && !setDest && canRun) // If its the first time
+                        {
+                            NavMeshPath path = new NavMeshPath();
+                            NavMesh.CalculatePath(spider.transform.position, flightDestination, NavMesh.AllAreas, path);
+
+                            // Set the path for the spider
+                            spider.agent.SetPath(path);
+                            Main.Log.LogInfo($"Set Path 1 {path}");
+                            setDest = true;
+                        }
+
+                    }
+                    Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} {spider} Decided to RUN");
+                    break;
+                case 3: // Stun
+                    spider.spiderSpeed = 0f;
+                    spider.agent.speed = 0f;
+                    spider.creatureAnimator.SetBool("moving", true);
+                    break;
+                default: return;
+            }
+
+        }
+        private static void DeterminePath(SandSpiderAI spider)
+        {
+            // Get the direction from the spider to the player
+            Vector3 directionToPlayer = spider.transform.position - closestPlayer.transform.position;
+            Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} player direction: {directionToPlayer}");
+
+            // Normalize the direction and scale it to a desired distance
+            Vector3 flightDirection = directionToPlayer.normalized * 30;
+            Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} flight direction: {flightDirection}");
+
+            // Calculate the destination point
+            flightDestination = spider.transform.position + flightDirection;
+            Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} flight destination: {flightDestination}");
+
+            // Ensure the destination is on the NavMesh
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(flightDestination, out hit, 30.0f, NavMesh.AllAreas))
+            {
+                Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} {spider} can run there");
+
+                // Set the spider's destination
+                if (!IsPlayerInPath(spider, flightDestination) || Vector3.Distance(spider.transform.position, hit.position) >= 10f)
+                {
+                    canRun = true;
+                    flightDestination = hit.position;
+                    Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} Find Destination 1");
+                }
+                else
+                {
+                    Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} {spider} is trapped 1");
+                    behaviorState = 1;
+                }
+            }
+            else // If the destination is unreachable / doesnt exist
+            {
+                Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} {spider} can't run in original direction");
+                // Try alternative directions or switch to attack
+                if (!TryFindAlternativePath(spider, directionToPlayer)) // If can't find an alternate path
+                {
+                    Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} {spider} is trapped 2");
+                    behaviorState = 1; // Switch to attack
+                }
+            }
+        }
+
+        private static void ResetSprayEffect()
+        {
+            SprayPaintItemPatch.IsEnemySprayed = false;
+            sprayTimer = 0f;
+            processTimer = 0f;
+            SprayPaintItemPatch.Enem.agent.ResetPath();
+            enemiesAffected = false;
+            isEligible = false;
+            targetSpider = null;
+            setDest = false;
+            Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} {SprayPaintItemPatch.Enem} recovered.");
+        }
+
+        // Function to get a direction vector from an angle and a base direction
+        static Vector3 DirectionFromAngle(float angleInDegrees, Vector3 direction)
+        {
+            // Rotate the vector by the angle around the Y-axis
+            return Quaternion.Euler(0, angleInDegrees, 0) * direction;
+        }
+
+        // New method to try finding an alternative path
+        static private bool TryFindAlternativePath(SandSpiderAI spider, Vector3 directionToPlayer)
+        {
+            float[] anglesToTry = { 45, -45, 90, -90, 135, -135, 180 };
+            foreach (float angle in anglesToTry)
+            {
+                Vector3 newFlightDirection = DirectionFromAngle(angle, directionToPlayer.normalized) * 15;
+                Vector3 newFlightDestination = spider.transform.position + newFlightDirection;
+                NavMeshHit hit;
+
+                if (NavMesh.SamplePosition(newFlightDestination, out hit, 30.0f, NavMesh.AllAreas))
+                {
+                    if (!IsPlayerInPath(spider, newFlightDestination) || Vector3.Distance(spider.transform.position, hit.position) >= 10f)
+                    {
+                        flightDestination = hit.position;
+                        canRun = true;
+                        Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} Find Destination 2");
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool IsPlayerInPath(SandSpiderAI spider, Vector3 flightDestination)
+        {
+            Vector3 toDestination = (flightDestination - spider.transform.position).normalized;
+            Vector3 toPlayer = (closestPlayer.transform.position - spider.transform.position).normalized;
+
+            // Calculate the angle between the two directions
+            float angle = Vector3.Angle(toDestination, toPlayer);
+            Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} The angle between the player and destination is {angle}");
+
+            // Threshold angle to decide if the player is "in the way"
+            return (angle <= 45f || angle >= 315f);
+        }
+
         // Below handles stunning the inputted enemy
         private static bool ProcessEnemyType<T>(T[] enemies) where T : EnemyAI
         {
@@ -293,43 +549,62 @@ namespace LethalPlus.Patches
                 if (enemy != null &&
                     SprayPaintItemPatch.Enem.transform.position == enemy.transform.position)
                 {
-                    enemy.agent.speed = 0f;
-                    targetEnemy = enemy;
-                    //Main.Log.LogInfo($"{enemy} Discombobulated");
+                    closestPlayer = enemy.GetClosestPlayer();
+                    switch (behaviorState)
+                    {
+                        case 1: // Fight
+                            enemy.agent.acceleration = 12f;
+                            break;
+                        case 2: // Flight
 
+                            // Get the direction from the spider to the player
+                            Vector3 directionToPlayer = enemy.transform.position - closestPlayer.transform.position;
+                            Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} player direction: {directionToPlayer}");
+                            // Normalize the direction and scale it to a desired distance
+                            Vector3 flightDirection = directionToPlayer.normalized * 50;
+                            Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} flight direction: {flightDirection}");
+                            // Calculate the destination point
+                            flightDestination = enemy.transform.position + flightDirection;
+                            Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} flight destination: {flightDestination}");
+                            /*// Ensure the destination is on the NavMesh
+                            NavMeshHit hit;
+                            if (NavMesh.SamplePosition(flightDestination, out hit, 10.0f, NavMesh.AllAreas))
+                            {
+                                flightDestination = hit.position;
+                            }
+                            else
+                            {
+                                // Handle case where no valid destination was found
+                                // You might want to choose a different direction or fallback behavior
+                                Main.Log.LogInfo($"{spider} cant run");
+                            }*/
+
+                            // Set the spider's destination
+                            enemy.agent.SetDestination(flightDestination);
+                            //spider.agent.speed = 9f;
+                            //spider.spiderSpeed = 9f;
+                            Main.Log.LogInfo($"{DateTime.Now.ToString("HH:mm:ss")} {enemy} Decided to RUN");
+                            break;
+                        case 3: // Deer In Headlights
+                            enemy.agent.speed = 0f;
+                            break;
+                        default:
+                            return false;
+                    }
                     return true;
                 }
             }
             return false;
         }
-        // Spiders for some reason arent affected when passed through the previous one so I had to make it's own dedicated method to extract its
-        // SandSpiderAI and use variables that belong to its base class to stun it
-        private static bool ProcessSpider<T>(T[] enemies) where T : EnemyAI
+    }
+    [HarmonyPatch(typeof(Terminal))]
+    internal class SprayPricePatch
+    {
+        [HarmonyPatch("SetItemSales")]
+        [HarmonyPostfix]
+        private static void StorePrices(ref Item[] ___buyableItemsList)
         {
-            foreach (SandSpiderAI spider in SprayPaintItemPatch.Spiders)
-            {
-                if (spider != null
-                    && SprayPaintItemPatch.Enem.transform.position != null
-                    && spider.transform.position != null
-                    && SprayPaintItemPatch.Enem.transform.position == spider.transform.position
-                    && SprayPaintItemPatch.IsEnemySprayed == true)
-                {
-                    spider.agent.speed = 0f;
-                    spider.spiderSpeed = 0f;
-                    //Main.Log.LogInfo($"{spider} Discombobulated");
-                    spider.creatureAnimator.SetBool("moving", true);
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private static void ResetSprayEffect()
-        {
-            SprayPaintItemPatch.IsEnemySprayed = false;
-            sprayTimer = 0f;
-            enemiesAffected = false;
-            Main.Log.LogInfo($"{SprayPaintItemPatch.Enem} recovered.");
+            ___buyableItemsList[12].creditsWorth = 400;
         }
     }
 
